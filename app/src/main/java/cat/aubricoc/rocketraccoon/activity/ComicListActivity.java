@@ -4,6 +4,7 @@ import android.app.ProgressDialog;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.View;
@@ -98,7 +99,10 @@ public class ComicListActivity extends AppCompatActivity {
 				detailFragment = fragment;
 			}
 		});
-		getSupportFragmentManager().beginTransaction().replace(R.id.comic_detail_container, fragment).commit();
+		FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
+		transaction.setCustomAnimations(R.anim.in_from_left, R.anim.out_to_right);
+		transaction.replace(R.id.comic_detail_container, fragment);
+		transaction.commit();
 	}
 
 	@Override
@@ -106,7 +110,10 @@ public class ComicListActivity extends AppCompatActivity {
 		if (detailFragment == null) {
 			super.onBackPressed();
 		} else {
-			getSupportFragmentManager().beginTransaction().remove(detailFragment).commit();
+			FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
+			transaction.setCustomAnimations(R.anim.in_from_left, R.anim.out_to_left);
+			transaction.remove(detailFragment);
+			transaction.commit();
 			detailFragment = null;
 			setTitle(R.string.app_name);
 		}
