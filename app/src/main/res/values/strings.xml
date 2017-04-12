@@ -1,4 +1,5 @@
 <resources>
 	<string name="app_name">RocketRaccoon</string>
 	<string name="title_comic_detail">Comic Detail</string>
+	<string name="comic_image">Comic Image</string>
 </resources>

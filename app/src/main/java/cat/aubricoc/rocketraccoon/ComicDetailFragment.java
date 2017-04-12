@@ -1,56 +1,37 @@
 package cat.aubricoc.rocketraccoon;
 
-import android.app.Activity;
-import android.support.design.widget.CollapsingToolbarLayout;
+import android.os.AsyncTask;
 import android.os.Bundle;
+import android.support.design.widget.CollapsingToolbarLayout;
 import android.support.v4.app.Fragment;
+import android.text.Html;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
 
-import cat.aubricoc.rocketraccoon.dummy.DummyContent;
+import com.bumptech.glide.Glide;
 
-/**
- * A fragment representing a single Comic detail screen.
- * This fragment is either contained in a {@link ComicListActivity}
- * in two-pane mode (on tablets) or a {@link ComicDetailActivity}
- * on handsets.
- */
+import java.util.List;
+import java.util.Random;
+
+import cat.aubricoc.rocketraccoon.model.Comic;
+import cat.aubricoc.rocketraccoon.model.Image;
+import cat.aubricoc.rocketraccoon.service.ComicService;
+
 public class ComicDetailFragment extends Fragment {
-	/**
-	 * The fragment argument representing the item ID that this fragment
-	 * represents.
-	 */
+
 	public static final String ARG_ITEM_ID = "item_id";
 
-	/**
-	 * The dummy content this fragment is presenting.
-	 */
-	private DummyContent.DummyItem mItem;
-
-	/**
-	 * Mandatory empty constructor for the fragment manager to instantiate the
-	 * fragment (e.g. upon screen orientation changes).
-	 */
-	public ComicDetailFragment() {
-	}
+	private Integer comicId;
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 
 		if (getArguments().containsKey(ARG_ITEM_ID)) {
-			// Load the dummy content specified by the fragment
-			// arguments. In a real-world scenario, use a Loader
-			// to load content from a content provider.
-			mItem = DummyContent.ITEM_MAP.get(getArguments().getString(ARG_ITEM_ID));
-
-			Activity activity = this.getActivity();
-			CollapsingToolbarLayout appBarLayout = (CollapsingToolbarLayout) activity.findViewById(R.id.toolbar_layout);
-			if (appBarLayout != null) {
-				appBarLayout.setTitle(mItem.content);
-			}
+			comicId = getArguments().getInt(ARG_ITEM_ID);
 		}
 	}
 
@@ -59,11 +40,44 @@ public class ComicDetailFragment extends Fragment {
 							 Bundle savedInstanceState) {
 		View rootView = inflater.inflate(R.layout.comic_detail, container, false);
 
-		// Show the dummy content as text in a TextView.
-		if (mItem != null) {
-			((TextView) rootView.findViewById(R.id.comic_detail)).setText(mItem.details);
-		}
+		new AsyncTask<Integer, Void, Comic>() {
+
+			@Override
+			protected Comic doInBackground(Integer... comicIds) {
+				return ComicService.newInstance(getContext()).getComic(comicIds[0]);
+			}
+
+			@Override
+			protected void onPostExecute(Comic comic) {
+				fillData(comic);
+			}
+		}.execute(comicId);
 
 		return rootView;
+	}
+
+	private void fillData(Comic comic) {
+		View rootView = getView();
+		if (rootView == null) {
+			return;
+		}
+
+		CollapsingToolbarLayout appBarLayout = (CollapsingToolbarLayout) getActivity().findViewById(R.id.toolbar_layout);
+		if (appBarLayout != null) {
+			appBarLayout.setTitle(comic.getTitle());
+		}
+
+		ImageView imageView = (ImageView) rootView.findViewById(R.id.image);
+		TextView titleView = (TextView) rootView.findViewById(R.id.title);
+		TextView descriptionView = (TextView) rootView.findViewById(R.id.description);
+
+		List<Image> images = comic.getImages();
+		if (images != null && !images.isEmpty()) {
+			Image image = images.get(new Random().nextInt(images.size()));
+			Glide.with(getContext()).load(image.getUrl()).into(imageView);
+		}
+
+		titleView.setText(comic.getTitle());
+		descriptionView.setText(Html.fromHtml(comic.getDescription()));
 	}
 }

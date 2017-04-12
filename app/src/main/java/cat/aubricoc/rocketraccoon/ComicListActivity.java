@@ -1,39 +1,31 @@
 package cat.aubricoc.rocketraccoon;
 
-import android.content.Context;
 import android.content.Intent;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
-import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.bumptech.glide.Glide;
 
-import cat.aubricoc.rocketraccoon.dummy.DummyContent;
-
+import java.util.ArrayList;
 import java.util.List;
 
-/**
- * An activity representing a list of Comics. This activity
- * has different presentations for handset and tablet-size devices. On
- * handsets, the activity presents a list of items, which when touched,
- * lead to a {@link ComicDetailActivity} representing
- * item details. On tablets, the activity presents the list of items and
- * item details side-by-side using two vertical panes.
- */
+import cat.aubricoc.rocketraccoon.model.Comic;
+import cat.aubricoc.rocketraccoon.service.ComicService;
+
 public class ComicListActivity extends AppCompatActivity {
 
-	/**
-	 * Whether or not the activity is in two-pane mode, i.e. running on a tablet
-	 * device.
-	 */
-	private boolean mTwoPane;
+	private boolean openDetailActivity = true;
+
+	private List<Comic> comics;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -44,71 +36,71 @@ public class ComicListActivity extends AppCompatActivity {
 		setSupportActionBar(toolbar);
 		toolbar.setTitle(getTitle());
 
-		FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-		fab.setOnClickListener(new View.OnClickListener() {
-			@Override
-			public void onClick(View view) {
-				Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-						.setAction("Action", null).show();
-			}
-		});
-
-		View recyclerView = findViewById(R.id.comic_list);
+		RecyclerView recyclerView = (RecyclerView) findViewById(R.id.comic_list);
 		assert recyclerView != null;
-		setupRecyclerView((RecyclerView) recyclerView);
+		setupRecyclerView(recyclerView);
 
 		if (findViewById(R.id.comic_detail_container) != null) {
-			// The detail container view will be present only in the
-			// large-screen layouts (res/values-w900dp).
-			// If this view is present, then the
-			// activity should be in two-pane mode.
-			mTwoPane = true;
+			openDetailActivity = false;
 		}
 	}
 
 	private void setupRecyclerView(@NonNull RecyclerView recyclerView) {
-		recyclerView.setAdapter(new SimpleItemRecyclerViewAdapter(DummyContent.ITEMS));
+		comics = new ArrayList<>();
+		final RecyclerView.Adapter adapter = new ComicsAdapter(comics);
+		recyclerView.setAdapter(adapter);
+
+		new AsyncTask<Void, Void, List<Comic>>() {
+
+			@Override
+			protected List<Comic> doInBackground(Void... voids) {
+				return ComicService.newInstance(ComicListActivity.this).getComics();
+			}
+
+			@Override
+			protected void onPostExecute(List<Comic> results) {
+				comics.addAll(results);
+				adapter.notifyDataSetChanged();
+			}
+		}.execute();
+
 	}
 
-	public class SimpleItemRecyclerViewAdapter
-			extends RecyclerView.Adapter<SimpleItemRecyclerViewAdapter.ViewHolder> {
+	class ComicsAdapter extends RecyclerView.Adapter<ComicsAdapter.ComicViewHolder> {
 
-		private final List<DummyContent.DummyItem> mValues;
+		private final List<Comic> mValues;
 
-		public SimpleItemRecyclerViewAdapter(List<DummyContent.DummyItem> items) {
+		ComicsAdapter(List<Comic> items) {
 			mValues = items;
 		}
 
 		@Override
-		public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+		public ComicViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
 			View view = LayoutInflater.from(parent.getContext())
 					.inflate(R.layout.comic_list_content, parent, false);
-			return new ViewHolder(view);
+			return new ComicViewHolder(view);
 		}
 
 		@Override
-		public void onBindViewHolder(final ViewHolder holder, int position) {
-			holder.mItem = mValues.get(position);
-			holder.mIdView.setText(mValues.get(position).id);
-			holder.mContentView.setText(mValues.get(position).content);
+		public void onBindViewHolder(final ComicViewHolder holder, int position) {
+			holder.comic = mValues.get(position);
+			holder.title.setText(holder.comic.getTitle());
 
-			holder.mView.setOnClickListener(new View.OnClickListener() {
+			Glide.with(ComicListActivity.this).load(holder.comic.getThumbnail().getUrl()).into(holder.thumbnail);
+
+			holder.view.setOnClickListener(new View.OnClickListener() {
 				@Override
 				public void onClick(View v) {
-					if (mTwoPane) {
+					if (openDetailActivity) {
+						Intent intent = new Intent(ComicListActivity.this, ComicDetailActivity.class);
+						intent.putExtra(ComicDetailFragment.ARG_ITEM_ID, holder.comic.getId());
+						startActivity(intent);
+					} else {
 						Bundle arguments = new Bundle();
-						arguments.putString(ComicDetailFragment.ARG_ITEM_ID, holder.mItem.id);
+						arguments.putInt(ComicDetailFragment.ARG_ITEM_ID, holder.comic.getId());
 						ComicDetailFragment fragment = new ComicDetailFragment();
 						fragment.setArguments(arguments);
-						getSupportFragmentManager().beginTransaction()
-								.replace(R.id.comic_detail_container, fragment)
-								.commit();
-					} else {
-						Context context = v.getContext();
-						Intent intent = new Intent(context, ComicDetailActivity.class);
-						intent.putExtra(ComicDetailFragment.ARG_ITEM_ID, holder.mItem.id);
-
-						context.startActivity(intent);
+						getSupportFragmentManager().beginTransaction().replace(R.id.comic_detail_container, fragment).commit();
 					}
 				}
 			});
@@ -119,22 +111,21 @@ public class ComicListActivity extends AppCompatActivity {
 			return mValues.size();
 		}
 
-		public class ViewHolder extends RecyclerView.ViewHolder {
-			public final View mView;
-			public final TextView mIdView;
-			public final TextView mContentView;
-			public DummyContent.DummyItem mItem;
+		class ComicViewHolder extends RecyclerView.ViewHolder {
 
-			public ViewHolder(View view) {
+			final View view;
+
+			final ImageView thumbnail;
+
+			final TextView title;
+
+			Comic comic;
+
+			ComicViewHolder(View view) {
 				super(view);
-				mView = view;
-				mIdView = (TextView) view.findViewById(R.id.id);
-				mContentView = (TextView) view.findViewById(R.id.content);
-			}
-
-			@Override
-			public String toString() {
-				return super.toString() + " '" + mContentView.getText() + "'";
+				this.view = view;
+				this.thumbnail = (ImageView) view.findViewById(R.id.thumbnail);
+				this.title = (TextView) view.findViewById(R.id.title);
 			}
 		}
 	}
