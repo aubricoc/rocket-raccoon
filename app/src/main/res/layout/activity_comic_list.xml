@@ -2,11 +2,9 @@
 <android.support.design.widget.CoordinatorLayout
 	xmlns:android="http://schemas.android.com/apk/res/android"
 	xmlns:app="http://schemas.android.com/apk/res-auto"
-	xmlns:tools="http://schemas.android.com/tools"
 	android:layout_width="match_parent"
 	android:layout_height="match_parent"
-	android:fitsSystemWindows="true"
-	tools:context="cat.aubricoc.rocketraccoon.ComicListActivity">
+	android:fitsSystemWindows="true">
 
 	<android.support.design.widget.AppBarLayout
 		android:id="@+id/app_bar"
@@ -18,6 +16,7 @@
 			android:id="@+id/toolbar"
 			android:layout_width="match_parent"
 			android:layout_height="?attr/actionBarSize"
+			app:navigationIcon="@mipmap/ic_launcher"
 			app:popupTheme="@style/AppTheme.PopupOverlay" />
 
 	</android.support.design.widget.AppBarLayout>

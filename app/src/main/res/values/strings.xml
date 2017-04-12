@@ -1,5 +1,8 @@
 <resources>
-	<string name="app_name">RocketRaccoon</string>
-	<string name="title_comic_detail">Comic Detail</string>
+	<string name="app_name">Rocket Raccoon</string>
 	<string name="comic_image">Comic Image</string>
+	<string name="loading">Loading…</string>
+	<string name="loading_comics">Rocket Raccoon\'s comics are coming!</string>
+	<string name="loading_comic">Searching for comic details</string>
+	<string name="select_comic"><![CDATA[<-- Choose a comic to show details]]></string>
 </resources>
