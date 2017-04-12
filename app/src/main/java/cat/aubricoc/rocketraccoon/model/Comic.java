@@ -1,17 +1,25 @@
 package cat.aubricoc.rocketraccoon.model;
 
+import com.canteratech.apa.annotation.Entity;
+import com.canteratech.apa.annotation.Id;
+import com.canteratech.apa.annotation.Transient;
+
 import java.util.List;
 
+@Entity
 public class Comic {
 
+	@Id
 	private Integer id;
 
 	private String title;
 
 	private String description;
 
+	@Transient
 	private Image thumbnail;
 
+	@Transient
 	private List<Image> images;
 
 	public Integer getId() {
