@@ -20,7 +20,7 @@
 	<style name="title">
 		<item name="android:textColor">@color/colorAccent</item>
 		<item name="android:textSize">32sp</item>
-		<item name="android:paddingBottom">16dp</item>
+		<item name="android:paddingBottom">@dimen/text_margin</item>
 		<item name="android:fontFamily">sans-serif-thin</item>
 	</style>
 
